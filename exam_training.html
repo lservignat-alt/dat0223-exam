@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAT0223 – Graph Theory Finals</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --border: #1e2330;
+    --accent: #4f8ef7;
+    --accent2: #2dd4bf;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --code-bg: #0a0c10;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 56px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-logo {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .header-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .header-sep { width: 1px; height: 20px; background: var(--border); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .score-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .score-badge .pts { color: var(--accent); font-weight: 700; }
+  .score-badge .total { color: var(--muted); }
+
+  /* QUIT BUTTON */
+  .quit-btn {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 200;
+    background: #1a1c24;
+    border: 1px solid #2a2d3a;
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .quit-btn:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: rgba(239,68,68,0.08);
+  }
+  .quit-btn svg { width: 14px; height: 14px; }
+
+  /* EXIT PAGE */
+  #exit-page {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: #1a3a6e;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    animation: fadeIn 0.4s ease;
+  }
+  #exit-page.active { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .exit-icon {
+    width: 72px; height: 72px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .exit-icon svg { width: 36px; height: 36px; color: white; }
+
+  .exit-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+    text-align: center;
+  }
+
+  .exit-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    max-width: 380px;
+    line-height: 1.7;
+  }
+
+  .exit-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 28px 40px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .exit-card .label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .exit-card .value {
+    font-size: 40px;
+    font-weight: 800;
+    color: white;
+  }
+  .exit-card .value span { color: rgba(255,255,255,0.4); font-size: 24px; }
+
+  /* TABS */
+  .tabs-wrapper {
+    position: fixed;
+    top: 56px; left: 0; right: 0;
+    z-index: 90;
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 32px;
+    gap: 0;
+  }
+
+  .tab {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-badge {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tab.active .tab-badge { background: rgba(79,142,247,0.15); border-color: rgba(79,142,247,0.3); color: var(--accent); }
+  .tab-badge.done { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.3); color: var(--success); }
+
+  /* MAIN */
+  main {
+    padding-top: 110px;
+    padding-bottom: 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-left: 32px;
+    padding-right: 32px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* EXERCISE HEADER */
+  .ex-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 24px;
+  }
+
+  .ex-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .ex-pts {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-left: 8px;
+  }
+  .ex-desc { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 600px; }
+
+  .score-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    text-align: center;
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+  .score-pill .s-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 6px; }
+  .score-pill .s-val { font-size: 26px; font-weight: 800; color: var(--success); }
+  .score-pill .s-total { font-size: 14px; color: var(--muted); }
+
+  /* QUESTION CARD */
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .q-card:focus-within { border-color: rgba(79,142,247,0.4); }
+
+  .q-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .q-title { font-size: 14px; font-weight: 700; }
+  .q-pts-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--muted);
+  }
+
+  .q-prompt {
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .q-body { padding: 16px 20px; }
+
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); opacity: 0.5; }
+
+  /* CODE EDITOR */
+  .code-area {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .code-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 0.08em;
+  }
+
+  .code-dots { display: flex; gap: 6px; }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dot.r { background: #ff5f57; }
+  .code-dot.y { background: #febc2e; }
+  .code-dot.g { background: #28c840; }
+
+  .code-editor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    width: 100%;
+    padding: 16px;
+    resize: vertical;
+    min-height: 160px;
+    outline: none;
+    tab-size: 4;
+  }
+  .code-editor::placeholder { color: var(--muted); opacity: 0.4; }
+
+  /* COMMENT LINE */
+  .comment { color: #4a5568; }
+  .kw { color: #a78bfa; }
+  .fn { color: #60a5fa; }
+  .str { color: #34d399; }
+  .num { color: #f97316; }
+
+  /* SUBMIT BTN */
+  .submit-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 32px;
+  }
+
+  .btn-submit {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-submit:hover { background: #3b7de8; transform: translateY(-1px); }
+
+  .btn-next {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    margin-right: 12px;
+  }
+  .btn-next:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0;
+  }
+
+  /* INLINE CODE */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(79,142,247,0.1);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.88em;
+  }
+
+  /* HINT */
+  .hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    opacity: 0.7;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    position: fixed;
+    top: 56px; left: 0; right: 0;
+    height: 2px;
+    z-index: 95;
+    background: var(--border);
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.4s ease;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <span class="header-logo">Albert School</span>
+    <div class="header-sep"></div>
+    <span class="header-title">DAT0223 — Graph Theory Finals</span>
+  </div>
+  <div class="header-right">
+    <div class="score-badge">
+      Ex. <span id="ex-indicator" class="pts">1</span> / 2
+    </div>
+  </div>
+</header>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progress-bar" style="width: 50%"></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrapper">
+  <div class="tab active" id="tab-1" onclick="showPage(1)">
+    <span>1 &nbsp;Minimum Spanning Trees &amp; Kruskal</span>
+    <span class="tab-badge" id="badge-1">10 pts</span>
+  </div>
+  <div class="tab" id="tab-2" onclick="showPage(2)">
+    <span>2 &nbsp;Dijkstra's Algorithm</span>
+    <span class="tab-badge" id="badge-2">15 pts</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- PAGE 1: THEORY + CODE -->
+  <div class="page active" id="page-1">
+    <div class="ex-header">
+      <div>
+        <div class="ex-title">Minimum Spanning Trees &amp; Kruskal <span class="ex-pts">10 pts</span></div>
+        <div class="ex-desc">This exercise covers the theory and practice of minimum spanning trees (MST) and their construction using Kruskal's algorithm.</div>
+      </div>
+      <div class="score-pill">
+        <div class="s-label">Score</div>
+        <div class="s-val">—</div>
+        <div class="s-total">/ 10</div>
+      </div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Definition of a Minimum Spanning Tree</span>
+        <span class="q-pts-badge">2 pts</span>
+      </div>
+      <div class="q-prompt">Give a precise definition of a Minimum Spanning Tree (MST).</div>
+      <div class="q-body">
+        <textarea placeholder="Write your definition here…" rows="3"></textarea>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Role of Union-Find in Kruskal's Algorithm</span>
+        <span class="q-pts-badge">3 pts</span>
+      </div>
+      <div class="q-prompt">Explain the role of the Union-Find data structure in Kruskal's algorithm.</div>
+      <div class="q-body">
+        <textarea placeholder="Explain in detail…" rows="4"></textarea>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Time Complexity of Kruskal's Algorithm</span>
+        <span class="q-pts-badge">2 pts</span>
+      </div>
+      <div class="q-prompt">What is the time complexity of Kruskal's algorithm? Justify your answer by explaining each step.</div>
+      <div class="q-body">
+        <textarea placeholder="O(…) because…" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CODE Q4 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Create a complete graph &amp; print node degrees</span>
+        <span class="q-pts-badge">3 pts</span>
+      </div>
+      <div class="q-prompt">
+        Create a complete graph with <code>5</code> nodes (labeled 0 to 4) and store it in <code>G</code>.<br>
+        Then print the degree of each node, one per line, in the format: <code>Node X: Y</code>
+      </div>
+      <div class="q-body">
+        <div class="code-area">
+          <div class="code-bar">
+            <div class="code-dots">
+              <div class="code-dot r"></div>
+              <div class="code-dot y"></div>
+              <div class="code-dot g"></div>
+            </div>
+            <span class="code-lang">python</span>
+          </div>
+          <textarea class="code-editor" spellcheck="false" placeholder="import networkx as nx&#10;&#10;# TODO: Create a complete graph with 5 nodes (labeled 0 to 4) and store it in G&#10;&#10;# TODO: Print the degree of each node, one per line, in the format:&#10;# Node X: Y"></textarea>
+        </div>
+        <div class="hint"># Node X: Y</div>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-next" onclick="showPage(2)">Next exercise →</button>
+    </div>
+  </div>
+
+  <!-- PAGE 2: DIJKSTRA -->
+  <div class="page" id="page-2">
+    <div class="ex-header">
+      <div>
+        <div class="ex-title">Dijkstra's Algorithm <span class="ex-pts">15 pts</span></div>
+        <div class="ex-desc">This exercise focuses on Dijkstra's shortest path algorithm, its implementation, and its properties in weighted graphs.</div>
+      </div>
+      <div class="score-pill">
+        <div class="s-label">Score</div>
+        <div class="s-val">—</div>
+        <div class="s-total">/ 15</div>
+      </div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Dijkstra's Algorithm — Core Principle</span>
+        <span class="q-pts-badge">2 pts</span>
+      </div>
+      <div class="q-prompt">Describe in your own words how Dijkstra's algorithm works. What problem does it solve?</div>
+      <div class="q-body">
+        <textarea placeholder="Dijkstra's algorithm finds…" rows="3"></textarea>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Why Dijkstra fails with negative weights</span>
+        <span class="q-pts-badge">2 pts</span>
+      </div>
+      <div class="q-prompt">Explain why Dijkstra's algorithm does not work correctly when a graph contains negative edge weights. Give a concrete example.</div>
+      <div class="q-body">
+        <textarea placeholder="Because…" rows="4"></textarea>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Priority Queue role in Dijkstra</span>
+        <span class="q-pts-badge">2 pts</span>
+      </div>
+      <div class="q-prompt">What is the role of the priority queue (min-heap) in Dijkstra's algorithm? How does it affect its time complexity?</div>
+      <div class="q-body">
+        <textarea placeholder="The priority queue is used to…" rows="3"></textarea>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Dijkstra vs Bellman-Ford</span>
+        <span class="q-pts-badge">2 pts</span>
+      </div>
+      <div class="q-prompt">Compare Dijkstra's algorithm and Bellman-Ford. When would you prefer one over the other?</div>
+      <div class="q-body">
+        <textarea placeholder="Dijkstra is better when… Bellman-Ford is better when…" rows="4"></textarea>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CODE Q5 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Build a weighted graph &amp; find shortest path</span>
+        <span class="q-pts-badge">4 pts</span>
+      </div>
+      <div class="q-prompt">
+        Create a weighted directed graph <code>G</code> with the following edges:<br>
+        <code>(0→1, w=4)</code>, <code>(0→2, w=1)</code>, <code>(2→1, w=2)</code>, <code>(1→3, w=1)</code>, <code>(2→3, w=5)</code>.<br>
+        Then find and print the shortest path from node <code>0</code> to node <code>3</code>.
+      </div>
+      <div class="q-body">
+        <div class="code-area">
+          <div class="code-bar">
+            <div class="code-dots">
+              <div class="code-dot r"></div>
+              <div class="code-dot y"></div>
+              <div class="code-dot g"></div>
+            </div>
+            <span class="code-lang">python</span>
+          </div>
+          <textarea class="code-editor" spellcheck="false" placeholder="import networkx as nx&#10;&#10;# TODO: Create a weighted directed graph G&#10;&#10;# TODO: Add edges with weights&#10;&#10;# TODO: Find and print the shortest path from node 0 to node 3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- CODE Q6 -->
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-title">Shortest path lengths from a source</span>
+        <span class="q-pts-badge">3 pts</span>
+      </div>
+      <div class="q-prompt">
+        Using the same graph <code>G</code> from the previous question, compute and print the shortest path length from node <code>0</code> to <strong>all other nodes</strong>, one per line in the format: <code>0 → X : dist</code>
+      </div>
+      <div class="q-body">
+        <div class="code-area">
+          <div class="code-bar">
+            <div class="code-dots">
+              <div class="code-dot r"></div>
+              <div class="code-dot y"></div>
+              <div class="code-dot g"></div>
+            </div>
+            <span class="code-lang">python</span>
+          </div>
+          <textarea class="code-editor" spellcheck="false" placeholder="# TODO: Compute shortest path lengths from node 0 to all nodes&#10;# Print in format: 0 → X : dist"></textarea>
+        </div>
+        <div class="hint"># 0 → X : dist</div>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-submit" onclick="submitExam()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        Submit exam
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<!-- QUIT BUTTON -->
+<button class="quit-btn" onclick="quitExam()">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+  </svg>
+  Quit exam
+</button>
+
+<!-- EXIT PAGE -->
+<div id="exit-page">
+  <div class="exit-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+  </div>
+  <div class="exit-title">You have left the exam</div>
+  <div class="exit-sub">Your session has been closed.<br>Please contact your instructor if this was a mistake.</div>
+  <div class="exit-card">
+    <div class="label">Exam</div>
+    <div class="value">DAT0223</div>
+  </div>
+  <div class="exit-card">
+    <div class="label">Time elapsed</div>
+    <div class="value" id="elapsed-time">00:00</div>
+  </div>
+</div>
+
+<script>
+  // TIMER
+  const startTime = Date.now();
+  function updateElapsed() {
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    const m = Math.floor(s / 60).toString().padStart(2,'0');
+    const sec = (s % 60).toString().padStart(2,'0');
+    document.getElementById('elapsed-time').textContent = m + ':' + sec;
+  }
+  setInterval(updateElapsed, 1000);
+
+  // PAGE SWITCHING
+  function showPage(n) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + n).classList.add('active');
+    document.getElementById('tab-' + n).classList.add('active');
+    document.getElementById('ex-indicator').textContent = n;
+    document.getElementById('progress-bar').style.width = (n === 1 ? '50%' : '100%');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // TAB handling for code editors
+  document.querySelectorAll('.code-editor').forEach(el => {
+    el.addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+      }
+    });
+  });
+
+  // QUIT
+  function quitExam() {
+    updateElapsed();
+    document.getElementById('exit-page').classList.add('active');
+  }
+
+  // SUBMIT
+  function submitExam() {
+    updateElapsed();
+    document.getElementById('exit-page').classList.add('active');
+    document.querySelector('.exit-title').textContent = 'Exam submitted successfully';
+    document.querySelector('.exit-sub').textContent = 'Your answers have been recorded.\nThank you for completing the exam.';
+  }
+</script>
+</body>
+</html>
