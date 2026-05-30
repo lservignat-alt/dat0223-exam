@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAT0223 — Graph Theory Finals</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --header-bg: #13162a;
+  --tab-active: #3b82f6;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+  --border: #e5e7eb;
+  --left-panel: 560px;
+  --header-h: 48px;
+  --tabs-h: 44px;
+  --nav-h: 52px;
+}
+body { font-family: 'Inter', sans-serif; background: #fff; color: var(--text); font-size: 14px; line-height: 1.5; height: 100vh; overflow: hidden; }
+
+/* HEADER */
+#header { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: var(--header-h); background: var(--header-bg); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+.h-left { display: flex; flex-direction: column; }
+.h-title { font-size: 13px; font-weight: 700; color: #fff; }
+.h-sub { font-size: 11px; color: #6b7a9f; }
+.h-right { display: flex; align-items: center; gap: 12px; }
+.h-ex { font-size: 12px; color: #6b7a9f; }
+.h-submit { background: #16a34a; color: #fff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 5px; }
+.h-submit:hover { background: #15803d; }
+
+/* TABS */
+#tabs { position: fixed; top: var(--header-h); left: 0; right: 0; z-index: 99; height: var(--tabs-h); background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: stretch; overflow-x: auto; scrollbar-width: none; }
+#tabs::-webkit-scrollbar { display: none; }
+.tab { display: flex; align-items: center; gap: 8px; padding: 0 18px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; flex-shrink: 0; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--tab-active); border-bottom-color: var(--tab-active); font-weight: 600; }
+.tab-pts { border: 1px solid var(--border); border-radius: 20px; padding: 1px 8px; font-size: 11px; }
+.tab.active .tab-pts { border-color: var(--tab-active); color: var(--tab-active); }
+
+/* LAYOUT */
+#layout { display: flex; position: fixed; top: calc(var(--header-h) + var(--tabs-h)); left: 0; right: 0; bottom: var(--nav-h); }
+
+/* LEFT PANEL */
+#left { width: var(--left-panel); min-width: var(--left-panel); overflow-y: auto; border-right: 1px solid var(--border); padding: 20px 20px 30px; }
+.page { display: none; }
+.page.active { display: block; }
+.ex-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.ex-title-pts { font-size: 13px; font-weight: 400; color: var(--text-muted); }
+.ex-desc { color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+.section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 18px 0 8px; }
+
+/* Q-CARD */
+.q-card { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; overflow: hidden; background: #f9fafb; }
+.q-card-header { padding: 11px 14px; font-weight: 600; font-size: 13px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.q-pts-small { font-weight: 400; color: var(--text-muted); font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+.q-prompt { padding: 10px 14px; font-size: 12px; color: var(--text-muted); line-height: 1.65; }
+.q-prompt p { margin-bottom: 5px; }
+.q-prompt p:last-child { margin-bottom: 0; }
+.q-prompt ol { padding-left: 16px; margin-top: 3px; }
+.q-prompt ol li { margin-bottom: 3px; }
+textarea.q-answer { width: calc(100% - 28px); border: 1px solid var(--border); outline: none; resize: vertical; font-family: 'Inter', sans-serif; font-size: 13px; min-height: 72px; background: #fff; border-radius: 6px; margin: 10px 14px; padding: 10px 12px; display: block; color: var(--text); }
+textarea.q-answer:focus { border-color: #93c5fd; }
+textarea.q-answer::placeholder { color: var(--text-light); }
+.ic { background: #f3f4f6; border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #374151; }
+
+/* CODE SNIPPET in left panel (copyable) */
+.code-snippet-wrap { margin: 8px 14px 10px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.code-snippet-bar { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; background: #f3f4f6; border-bottom: 1px solid var(--border); }
+.code-snippet-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.copy-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: 11px; cursor: pointer; color: var(--text-muted); font-family: 'Inter', sans-serif; transition: all 0.15s; }
+.copy-btn:hover { background: #e5e7eb; }
+.copy-btn.copied { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
+.code-snippet { background: #fff; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #1e2433; padding: 10px 12px; white-space: pre; overflow-x: auto; line-height: 1.6; }
+
+/* TEST button */
+.test-row { display: flex; align-items: center; gap: 8px; padding: 8px 14px 12px; flex-wrap: wrap; }
+.test-btn { display: flex; align-items: center; gap: 5px; background: #16a34a; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.15s; }
+.test-btn:hover { background: #15803d; }
+.test-btn svg { flex-shrink: 0; }
+.test-result { font-size: 12px; font-weight: 600; display: none; align-items: center; gap: 4px; }
+.test-result.pass { color: #16a34a; display: flex; }
+.test-result.fail { color: #dc2626; display: flex; }
+
+/* TEXT-ONLY */
+.text-only { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 12px; background: #f9fafb; }
+.text-only p { font-size: 14px; color: #9ca3af; }
+
+/* RIGHT / CODE EDITOR */
+#right { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.code-pane { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.code-pane.active { display: flex; }
+
+/* Editable code area (yellow zone) */
+.code-editor-area { flex: 1; display: flex; flex-direction: column; min-height: 0; background: #fff; border-bottom: 1px solid var(--border); }
+.code-editor-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: #f9fafb; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.code-editor-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.run-btn { background: #13162a; color: #fff; border: none; border-radius: 6px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 5px; }
+.run-btn:hover { background: #1e2d5a; }
+.run-hint { font-size: 11px; color: var(--text-light); font-family: 'JetBrains Mono', monospace; }
+.code-textarea { flex: 1; width: 100%; background: #fff; border: none; outline: none; resize: none; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #1e2433; padding: 14px 16px; tab-size: 4; min-height: 0; }
+
+/* Output */
+.output-wrap { background: #f9fafb; border-top: 1px solid var(--border); max-height: 120px; overflow-y: auto; flex-shrink: 0; }
+.output-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); padding: 7px 16px 3px; }
+.output-content { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #1e2433; padding: 0 16px 8px; white-space: pre-wrap; min-height: 16px; }
+.output-content.error { color: #dc2626; }
+.output-content:empty::before { content: '—'; color: #d1d5db; }
+
+/* NAV */
+#nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: #fff; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 90; }
+.nav-btn { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text); font-family: 'Inter', sans-serif; }
+.nav-btn:hover { background: #f9fafb; }
+.nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* EXIT */
+#exit-overlay { display: none; position: fixed; inset: 0; z-index: 999; background: #2d2a9e; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+#exit-overlay.show { display: flex; }
+.exit-icon-wrap { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; }
+.exit-title { font-size: 26px; font-weight: 700; color: #fff; }
+.exit-sub { font-size: 13px; color: rgba(255,255,255,0.6); text-align: center; }
+.exit-info { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 18px 32px; text-align: center; }
+.exit-info .ei-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+.exit-info .ei-val { font-size: 20px; font-weight: 700; color: #fff; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="h-left">
+    <span class="h-title">DAT0223 — Graph Theory Finals</span>
+    <span class="h-sub">lservignat@albertschool.com</span>
+  </div>
+  <div class="h-right">
+    <span class="h-ex">Ex. <span id="ex-num">1</span> / 6</span>
+    <button class="h-submit" onclick="submitExam()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      Submit exam
+    </button>
+  </div>
+</div>
+
+<div id="tabs">
+  <div class="tab active" id="tab-1" onclick="goTo(1)">1&nbsp; MST &amp; Kruskal <span class="tab-pts">10 pts</span></div>
+  <div class="tab" id="tab-2" onclick="goTo(2)">2&nbsp; Random Walks <span class="tab-pts">8 pts</span></div>
+  <div class="tab" id="tab-3" onclick="goTo(3)">3&nbsp; Markov Property <span class="tab-pts">8 pts</span></div>
+  <div class="tab" id="tab-4" onclick="goTo(4)">4&nbsp; Transition Matrices <span class="tab-pts">10 pts</span></div>
+  <div class="tab" id="tab-5" onclick="goTo(5)">5&nbsp; Stationary Distributions <span class="tab-pts">8 pts</span></div>
+  <div class="tab" id="tab-6" onclick="goTo(6)">6&nbsp; PageRank <span class="tab-pts">16 pts</span></div>
+</div>
+
+<div id="layout">
+  <div id="left">
+
+    <!-- PAGE 1 — theory only -->
+    <div class="page active" id="page-1">
+      <div class="ex-title">Minimum Spanning Trees &amp; Kruskal <span class="ex-title-pts">10 pts</span></div>
+      <p class="ex-desc" style="margin-top:6px">This exercise covers the theory of MSTs and Kruskal's algorithm. Write your answers in the fields below. No automated tests — answers graded manually.</p>
+      <div class="section-title">Theory</div>
+      <div class="q-card">
+        <div class="q-card-header">Q1 — Definition &amp; properties of an MST <span class="q-pts-small">(2 pts)</span></div>
+        <div class="q-prompt">
+          <p>a) Give a formal definition of a Minimum Spanning Tree of G = (V, E) with weight function w: E → ℝ.</p>
+          <p>b) State two fundamental properties every MST must satisfy. Justify why removing any edge disconnects it.</p>
+          <p>c) Is the MST always unique? Under what condition is uniqueness guaranteed? Give a counterexample if not.</p>
+        </div>
+        <textarea class="q-answer" placeholder="a) An MST of G is a spanning subgraph T such that…&#10;b) Property 1: … Property 2: …&#10;c) The MST is unique when…" rows="6"></textarea>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q2 — Trace Kruskal's algorithm <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>Apply Kruskal's algorithm on G with edges: (A,B,4), (A,C,3), (B,C,2), (B,D,5), (C,D,1), (C,E,6), (D,E,4), (D,F,2), (E,G,3), (F,G,5).</p>
+          <ol>
+            <li>Sort all edges by weight and list them in order.</li>
+            <li>For each edge, state whether it is <strong>added</strong> or <strong>rejected</strong> (cycle), and why.</li>
+            <li>Give the final MST edges and total weight.</li>
+          </ol>
+        </div>
+        <textarea class="q-answer" placeholder="Sorted edges: (C,D,1), (B,C,2), …&#10;Add (C,D,1): no cycle. …&#10;Final MST: { } — Total weight: " rows="8"></textarea>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q3 — Union-Find: structure &amp; role <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>a) Describe Union-Find. What do <span class="ic">find</span> and <span class="ic">union</span> do? What is their complexity with path compression + union by rank?</p>
+          <p>b) How is Union-Find used in Kruskal's to detect cycles? What does it mean for two nodes to be in the same component?</p>
+          <p>c) Without Union-Find, what alternative detects cycles, and what is the impact on Kruskal's overall complexity?</p>
+        </div>
+        <textarea class="q-answer" placeholder="a) find(x) returns the root of x's set…&#10;b) Before adding (u,v), check find(u) == find(v)…&#10;c) Alternative DFS: complexity becomes…" rows="7"></textarea>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q4 — Time complexity &amp; Kruskal vs Prim <span class="q-pts-small">(2 pts)</span></div>
+        <div class="q-prompt">
+          <p>a) Give the full time complexity of Kruskal's: break it down by step (sorting, Union-Find). Justify each term with |V| and |E|.</p>
+          <p>b) Compare with Prim's: which is better on dense graphs (|E| ≈ |V|²)? On sparse graphs (|E| ≈ |V|)?</p>
+        </div>
+        <textarea class="q-answer" placeholder="a) Sorting: O(|E| log |E|). Union-Find: O(|E| α(|V|))…&#10;b) Dense graphs: Prim O(|E| + |V| log |V|)…" rows="6"></textarea>
+      </div>
+    </div>
+
+
+    <!-- PAGE 2 — Random Walks -->
+    <div class="page" id="page-2">
+      <div class="ex-title">Random Walks on Graphs <span class="ex-title-pts">8 pts</span></div>
+      <p class="ex-desc" style="margin-top:6px">A random walk on a graph is a stochastic process that moves from node to node by following edges chosen uniformly at random. Implement and analyse a random walk on the graph provided.</p>
+      <div class="section-title">Theory</div>
+      <div class="q-card">
+        <div class="q-card-header">Q1 — Definition of a random walk <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>a) Give a formal definition of a random walk on an undirected graph G = (V, E). What is the probability of moving from node u to node v in one step?</p>
+          <p>b) What is the difference between a <strong>simple random walk</strong> and a <strong>lazy random walk</strong>? When is a lazy walk used?</p>
+          <p>c) Does a random walk always converge to a unique distribution? What graph properties are required for convergence?</p>
+        </div>
+        <textarea class="q-answer" placeholder="a) At each step, from node u we move to a neighbor v with probability 1/deg(u)…&#10;b) A lazy walk stays at u with probability 1/2…&#10;c) Convergence requires the graph to be…" rows="6"></textarea>
+      </div>
+      <div class="section-title">Graph &amp; Tests</div>
+      <div class="q-card">
+        <div class="q-card-header">Graph definition</div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">python</span><button class="copy-btn" onclick="copySnippet(this,'snip-g2')">Copy</button></div>
+          <div class="code-snippet" id="snip-g2">graph = {
+    0: [1, 2, 3],
+    1: [0, 2],
+    2: [0, 1, 3],
+    3: [0, 2]
+}</div>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q2 — Simulate a random walk <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>Implement <span class="ic">random_walk(graph, start, steps)</span> that simulates a random walk for <span class="ic">steps</span> iterations starting from <span class="ic">start</span>. Return the list of visited nodes.</p>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test</span><button class="copy-btn" onclick="copySnippet(this,'snip-t2-1')">Copy</button></div>
+          <div class="code-snippet" id="snip-t2-1">walk = random_walk(graph, 0, 10)
+print(len(walk) == 11)
+print(all(n in graph for n in walk))</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(2,'q2',`walk = random_walk(graph, 0, 10)
+print(len(walk) == 11 and all(n in graph for n in walk))`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q2
+          </button>
+          <span class="test-result" id="tr-2-q2"></span>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q3 — Empirical visit frequency <span class="q-pts-small">(2 pts)</span></div>
+        <div class="q-prompt">
+          <p>Simulate a walk of 10,000 steps from node 0. Compute the visit frequency of each node (number of visits / total steps). Print the frequencies sorted by node index.</p>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test — frequencies sum to 1</span><button class="copy-btn" onclick="copySnippet(this,'snip-t2-3')">Copy</button></div>
+          <div class="code-snippet" id="snip-t2-3">walk = random_walk(graph, 0, 10000)
+freq = {n: walk.count(n)/len(walk) for n in graph}
+print(round(sum(freq.values()), 2) == 1.0)</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(2,'q3',`walk = random_walk(graph, 0, 10000)
+freq = {n: walk.count(n)/len(walk) for n in graph}
+print(round(sum(freq.values()), 2) == 1.0)`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q3
+          </button>
+          <span class="test-result" id="tr-2-q3"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3 — Markov Property -->
+    <div class="page" id="page-3">
+      <div class="ex-title">Markov Property <span class="ex-title-pts">8 pts</span></div>
+      <p class="ex-desc" style="margin-top:6px">A stochastic process has the Markov property if the future state depends only on the current state, not on the history. Random walks on graphs are Markov chains.</p>
+      <div class="section-title">Theory</div>
+      <div class="q-card">
+        <div class="q-card-header">Q1 — Formal definition <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>a) State the Markov property formally using conditional probability notation: P(X_{n+1} = x | X_0, X_1, …, X_n) = ?</p>
+          <p>b) Why does a random walk on a graph satisfy the Markov property? Justify with respect to the graph structure.</p>
+          <p>c) What is the difference between a <strong>time-homogeneous</strong> and a <strong>time-inhomogeneous</strong> Markov chain? Which applies to a standard random walk?</p>
+        </div>
+        <textarea class="q-answer" placeholder="a) P(X_{n+1} = x | X_0, …, X_n) = P(X_{n+1} = x | X_n)…&#10;b) The next node only depends on the current node because…&#10;c) Time-homogeneous means transition probabilities do not change over time…" rows="7"></textarea>
+      </div>
+      <div class="section-title">Graph &amp; Tests</div>
+      <div class="q-card">
+        <div class="q-card-header">Graph definition</div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">python</span><button class="copy-btn" onclick="copySnippet(this,'snip-g3')">Copy</button></div>
+          <div class="code-snippet" id="snip-g3">graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'C', 'D'],
+    'C': ['A', 'B'],
+    'D': ['B']
+}</div>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q2 — Verify Markov property empirically <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>Implement <span class="ic">next_step_prob(graph, current)</span> that returns a dict of {neighbor: probability} for the next step from <span class="ic">current</span>. Verify that the probabilities sum to 1 for every node.</p>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test</span><button class="copy-btn" onclick="copySnippet(this,'snip-t3-2')">Copy</button></div>
+          <div class="code-snippet" id="snip-t3-2">for node in graph:
+    probs = next_step_prob(graph, node)
+    print(node, round(sum(probs.values()), 4) == 1.0)</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(3,'q2',`results = [round(sum(next_step_prob(graph, n).values()), 4) == 1.0 for n in graph]
+print(all(results))`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q2
+          </button>
+          <span class="test-result" id="tr-3-q2"></span>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q3 — Irreducibility &amp; aperiodicity <span class="q-pts-small">(2 pts)</span></div>
+        <div class="q-prompt">
+          <p>In a comment block in your code, explain: (1) what it means for a Markov chain to be <strong>irreducible</strong> — is the graph above irreducible? (2) what it means to be <strong>aperiodic</strong> — is the chain above aperiodic? Justify both answers.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 4 — Transition Matrices -->
+    <div class="page" id="page-4">
+      <div class="ex-title">Transition Matrices <span class="ex-title-pts">10 pts</span></div>
+      <p class="ex-desc" style="margin-top:6px">The transition matrix P of a Markov chain encodes the one-step transition probabilities. Entry P[i][j] is the probability of going from state i to state j.</p>
+      <div class="section-title">Theory</div>
+      <div class="q-card">
+        <div class="q-card-header">Q1 — Construction &amp; properties <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>a) How is the transition matrix P built from the adjacency matrix A of an undirected graph? Write the formula for P[i][j].</p>
+          <p>b) What property must each row of P satisfy? What is this type of matrix called?</p>
+          <p>c) What does P² represent? And Pⁿ in general? What does the entry (Pⁿ)[i][j] mean?</p>
+        </div>
+        <textarea class="q-answer" placeholder="a) P[i][j] = A[i][j] / deg(i) where deg(i) is the degree of node i…&#10;b) Each row sums to 1 — this is called a row-stochastic (or left-stochastic) matrix…&#10;c) P² gives 2-step transition probabilities…" rows="6"></textarea>
+      </div>
+      <div class="section-title">Graph &amp; Tests</div>
+      <div class="q-card">
+        <div class="q-card-header">Graph definition</div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">python</span><button class="copy-btn" onclick="copySnippet(this,'snip-g4')">Copy</button></div>
+          <div class="code-snippet" id="snip-g4">graph = {
+    0: [1, 2],
+    1: [0, 2, 3],
+    2: [0, 1, 3],
+    3: [1, 2]
+}</div>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q2 — Build the transition matrix <span class="q-pts-small">(4 pts)</span></div>
+        <div class="q-prompt">
+          <p>Implement <span class="ic">transition_matrix(graph)</span> that returns a 2D list P where <span class="ic">P[i][j]</span> is the probability of moving from node i to node j. Nodes are indexed by their sorted order.</p>
+          <ol>
+            <li>Each row must sum to 1.0.</li>
+            <li>Nodes with no neighbors (dangling): distribute probability uniformly.</li>
+            <li>Print the matrix formatted to 4 decimal places.</li>
+          </ol>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test — row sums</span><button class="copy-btn" onclick="copySnippet(this,'snip-t4-2')">Copy</button></div>
+          <div class="code-snippet" id="snip-t4-2">P = transition_matrix(graph)
+print(all(round(sum(row), 4) == 1.0 for row in P))</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(4,'q2',`P = transition_matrix(graph)
+print(all(round(sum(row), 4) == 1.0 for row in P))`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q2
+          </button>
+          <span class="test-result" id="tr-4-q2"></span>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q3 — Matrix power (2-step probabilities) <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>Implement <span class="ic">mat_mul(A, B)</span> for matrix multiplication. Then compute P² using your function. Print P²[0][3]: the probability of going from node 0 to node 3 in exactly 2 steps.</p>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test — 2-step probability</span><button class="copy-btn" onclick="copySnippet(this,'snip-t4-3')">Copy</button></div>
+          <div class="code-snippet" id="snip-t4-3">P = transition_matrix(graph)
+P2 = mat_mul(P, P)
+print(round(P2[0][3], 4))</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(4,'q3',`P = transition_matrix(graph)
+P2 = mat_mul(P, P)
+print(round(P2[0][3], 4) > 0)`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q3
+          </button>
+          <span class="test-result" id="tr-4-q3"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 5 — Stationary Distributions -->
+    <div class="page" id="page-5">
+      <div class="ex-title">Stationary Distributions <span class="ex-title-pts">8 pts</span></div>
+      <p class="ex-desc" style="margin-top:6px">A stationary distribution π is a probability distribution over nodes that remains unchanged after one step of the random walk: π = π · P.</p>
+      <div class="section-title">Theory</div>
+      <div class="q-card">
+        <div class="q-card-header">Q1 — Definition &amp; existence <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>a) Give the equation that defines a stationary distribution π for a Markov chain with transition matrix P. What constraint must π satisfy beyond this equation?</p>
+          <p>b) For an undirected graph, what is the analytical formula for the stationary distribution of a simple random walk? Express π(v) in terms of the degree of v.</p>
+          <p>c) Under what conditions (on the Markov chain) is the stationary distribution unique? What happens if the chain is reducible?</p>
+        </div>
+        <textarea class="q-answer" placeholder="a) π satisfies π·P = π and Σπ(v) = 1…&#10;b) For undirected graphs: π(v) = deg(v) / (2|E|)…&#10;c) Uniqueness requires irreducibility and aperiodicity…" rows="6"></textarea>
+      </div>
+      <div class="section-title">Graph &amp; Tests</div>
+      <div class="q-card">
+        <div class="q-card-header">Graph definition</div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">python</span><button class="copy-btn" onclick="copySnippet(this,'snip-g5')">Copy</button></div>
+          <div class="code-snippet" id="snip-g5">graph = {
+    0: [1, 2, 3],
+    1: [0, 2],
+    2: [0, 1, 3],
+    3: [0, 2]
+}</div>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q2 — Compute stationary distribution by iteration <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>Implement <span class="ic">stationary_distribution(graph, iterations=1000)</span> by repeatedly multiplying a probability vector by the transition matrix P until convergence. Return a dict node → probability.</p>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test — sums to 1</span><button class="copy-btn" onclick="copySnippet(this,'snip-t5-2')">Copy</button></div>
+          <div class="code-snippet" id="snip-t5-2">pi = stationary_distribution(graph)
+print(round(sum(pi.values()), 4) == 1.0)</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(5,'q2',`pi = stationary_distribution(graph)
+print(round(sum(pi.values()), 4) == 1.0)`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q2
+          </button>
+          <span class="test-result" id="tr-5-q2"></span>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q3 — Verify analytical formula <span class="q-pts-small">(2 pts)</span></div>
+        <div class="q-prompt">
+          <p>Compute the analytical stationary distribution using π(v) = deg(v) / (2|E|). Compare it to your iterative result. Print whether the two agree within a tolerance of 1e-3 for each node.</p>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test — matches analytical</span><button class="copy-btn" onclick="copySnippet(this,'snip-t5-3')">Copy</button></div>
+          <div class="code-snippet" id="snip-t5-3">pi_iter = stationary_distribution(graph)
+E = sum(len(v) for v in graph.values()) // 2
+pi_anal = {n: len(graph[n])/(2*E) for n in graph}
+print(all(abs(pi_iter[n]-pi_anal[n]) < 1e-3 for n in graph))</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(5,'q3',`pi_iter = stationary_distribution(graph)
+E = sum(len(v) for v in graph.values()) // 2
+pi_anal = {n: len(graph[n])/(2*E) for n in graph}
+print(all(abs(pi_iter[n]-pi_anal[n]) < 1e-3 for n in graph))`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q3
+          </button>
+          <span class="test-result" id="tr-5-q3"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 6 — PageRank -->
+    <div class="page" id="page-6">
+      <div class="ex-title">PageRank <span class="ex-title-pts">16 pts</span></div>
+      <p class="ex-desc" style="margin-top:6px">PageRank models node importance in a directed graph using a random walk with a damping factor d. Implement it from scratch using power iteration.</p>
+      <div class="section-title">Theory</div>
+      <div class="q-card">
+        <div class="q-card-header">Q1 — Damping factor &amp; teleportation <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>a) Write the PageRank formula: PR(u) = ? Explain every term.</p>
+          <p>b) What is the role of the damping factor d (typically 0.85)? What does 1-d represent in terms of a random surfer model?</p>
+          <p>c) What problem does the damping factor solve compared to a pure random walk? Consider dangling nodes and disconnected components.</p>
+        </div>
+        <textarea class="q-answer" placeholder="a) PR(u) = (1-d)/N + d × Σ_{v→u} PR(v)/out(v)…&#10;b) d is the probability of following a link. 1-d is the teleportation probability…&#10;c) Without damping, dangling nodes absorb all rank…" rows="6"></textarea>
+      </div>
+      <div class="section-title">Graph &amp; Tests</div>
+      <div class="q-card">
+        <div class="q-card-header">Graph definition</div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">python</span><button class="copy-btn" onclick="copySnippet(this,'snip-g6')">Copy</button></div>
+          <div class="code-snippet" id="snip-g6">graph = {
+    'A': ['B', 'C'],
+    'B': ['D'],
+    'C': ['A', 'B', 'D'],
+    'D': ['E'],
+    'E': ['A', 'C']
+}</div>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q2 — Implement pagerank() <span class="q-pts-small">(5 pts)</span></div>
+        <div class="q-prompt">
+          <p>Implement <span class="ic">pagerank(G, d=0.85, iterations=100)</span>. Use the formula above. Initialize all ranks to 1/N and update simultaneously at each iteration. Return a dict node → score.</p>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test — ranks sum to 1</span><button class="copy-btn" onclick="copySnippet(this,'snip-t6-2')">Copy</button></div>
+          <div class="code-snippet" id="snip-t6-2">ranks = pagerank(graph)
+print(round(sum(ranks.values()), 4) == 1.0)</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(6,'q2',`ranks = pagerank(graph)
+print(round(sum(ranks.values()), 4) == 1.0)`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q2
+          </button>
+          <span class="test-result" id="tr-6-q2"></span>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q3 — Print &amp; analyse results <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>Print scores sorted highest → lowest. In a comment, explain: (1) which page ranks highest and why; (2) what happens when d=0 and d=1 mathematically.</p>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(6,'q3',`ranks = pagerank(graph)
+s = sorted(ranks.items(), key=lambda x: -x[1])
+print(s[0][1] > s[-1][1])`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q3
+          </button>
+          <span class="test-result" id="tr-6-q3"></span>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q4 — Convergence with L1 norm <span class="q-pts-small">(3 pts)</span></div>
+        <div class="q-prompt">
+          <p>Modify <span class="ic">pagerank()</span> to stop early when the L1 norm of the rank change is &lt; <span class="ic">1e-6</span>. Return <span class="ic">(ranks, iters)</span>. Print how many iterations were needed. In a comment, link PageRank to the stationary distribution of a Markov chain.</p>
+        </div>
+        <div class="code-snippet-wrap">
+          <div class="code-snippet-bar"><span class="code-snippet-label">test — early stopping</span><button class="copy-btn" onclick="copySnippet(this,'snip-t6-4')">Copy</button></div>
+          <div class="code-snippet" id="snip-t6-4">ranks, iters = pagerank(graph, return_iters=True)
+print(iters < 100)</div>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(6,'q4',`ranks, iters = pagerank(graph, return_iters=True)
+print(iters < 100)`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q4
+          </button>
+          <span class="test-result" id="tr-6-q4"></span>
+        </div>
+      </div>
+      <div class="q-card">
+        <div class="q-card-header">Q5 — Effect of damping factor <span class="q-pts-small">(2 pts)</span></div>
+        <div class="q-prompt">
+          <p>Run <span class="ic">pagerank(graph, d=0.5)</span> and <span class="ic">pagerank(graph, d=0.99)</span>. Print both sets of scores. In a comment, explain: how does increasing d affect the distribution of scores? Which value of d makes PageRank closer to the pure stationary distribution?</p>
+        </div>
+        <div class="test-row">
+          <button class="test-btn" onclick="runTest(6,'q5',`r1 = pagerank(graph, d=0.5)
+r2 = pagerank(graph, d=0.99)
+print(max(r2.values()) > max(r1.values()))`,'True')">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Test Q5
+          </button>
+          <span class="test-result" id="tr-6-q5"></span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- RIGHT -->
+  <div id="right">
+
+    <!-- PANE 1 — text only -->
+    <div class="code-pane active" id="code-1">
+      <div class="text-only">
+        <span style="font-size:40px">🗒️</span>
+        <p>Exercice texte uniquement</p>
+      </div>
+    </div>
+
+    <div class="code-pane" id="code-2">
+      <div class="code-editor-area">
+        <div class="code-editor-header">
+          <span class="code-editor-label">Your code — python</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="run-hint">Ctrl+Enter to run</span>
+            <button class="run-btn" onclick="runCode(2)">
+              <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+              Run
+            </button>
+          </div>
+        </div>
+        <textarea class="code-textarea" id="input-2" spellcheck="false">import random
+
+graph = {
+    0: [1, 2, 3],
+    1: [0, 2],
+    2: [0, 1, 3],
+    3: [0, 2]
+}
+
+# Q2: implement random_walk(graph, start, steps)
+def random_walk(graph, start, steps):
+    # TODO
+    pass
+
+# Q3: simulate 10000 steps and compute visit frequencies
+</textarea>
+      </div>
+      <div class="output-wrap">
+        <div class="output-label">Output</div>
+        <div class="output-content" id="out-2"></div>
+      </div>
+    </div>
+    <div class="code-pane" id="code-3">
+      <div class="code-editor-area">
+        <div class="code-editor-header">
+          <span class="code-editor-label">Your code — python</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="run-hint">Ctrl+Enter to run</span>
+            <button class="run-btn" onclick="runCode(3)">
+              <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+              Run
+            </button>
+          </div>
+        </div>
+        <textarea class="code-textarea" id="input-3" spellcheck="false">graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'C', 'D'],
+    'C': ['A', 'B'],
+    'D': ['B']
+}
+
+# Q2: implement next_step_prob(graph, current)
+# returns dict {neighbor: probability}
+def next_step_prob(graph, current):
+    # TODO
+    pass
+
+# Q3: comment on irreducibility and aperiodicity
+</textarea>
+      </div>
+      <div class="output-wrap">
+        <div class="output-label">Output</div>
+        <div class="output-content" id="out-3"></div>
+      </div>
+    </div>
+    <div class="code-pane" id="code-4">
+      <div class="code-editor-area">
+        <div class="code-editor-header">
+          <span class="code-editor-label">Your code — python</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="run-hint">Ctrl+Enter to run</span>
+            <button class="run-btn" onclick="runCode(4)">
+              <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+              Run
+            </button>
+          </div>
+        </div>
+        <textarea class="code-textarea" id="input-4" spellcheck="false">graph = {
+    0: [1, 2],
+    1: [0, 2, 3],
+    2: [0, 1, 3],
+    3: [1, 2]
+}
+
+# Q2: implement transition_matrix(graph)
+# returns a 2D list P (row-stochastic)
+def transition_matrix(graph):
+    # TODO
+    pass
+
+# Q3: implement mat_mul(A, B) and compute P²
+def mat_mul(A, B):
+    # TODO
+    pass
+</textarea>
+      </div>
+      <div class="output-wrap">
+        <div class="output-label">Output</div>
+        <div class="output-content" id="out-4"></div>
+      </div>
+    </div>
+    <div class="code-pane" id="code-5">
+      <div class="code-editor-area">
+        <div class="code-editor-header">
+          <span class="code-editor-label">Your code — python</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="run-hint">Ctrl+Enter to run</span>
+            <button class="run-btn" onclick="runCode(5)">
+              <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+              Run
+            </button>
+          </div>
+        </div>
+        <textarea class="code-textarea" id="input-5" spellcheck="false">graph = {
+    0: [1, 2, 3],
+    1: [0, 2],
+    2: [0, 1, 3],
+    3: [0, 2]
+}
+
+# Q2: implement stationary_distribution(graph, iterations=1000)
+def stationary_distribution(graph, iterations=1000):
+    # TODO: multiply probability vector by P until convergence
+    pass
+
+# Q3: compare with analytical formula pi(v) = deg(v) / (2*|E|)
+</textarea>
+      </div>
+      <div class="output-wrap">
+        <div class="output-label">Output</div>
+        <div class="output-content" id="out-5"></div>
+      </div>
+    </div>
+    <div class="code-pane" id="code-6">
+      <div class="code-editor-area">
+        <div class="code-editor-header">
+          <span class="code-editor-label">Your code — python</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="run-hint">Ctrl+Enter to run</span>
+            <button class="run-btn" onclick="runCode(6)">
+              <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+              Run
+            </button>
+          </div>
+        </div>
+        <textarea class="code-textarea" id="input-6" spellcheck="false">graph = {
+    'A': ['B', 'C'],
+    'B': ['D'],
+    'C': ['A', 'B', 'D'],
+    'D': ['E'],
+    'E': ['A', 'C']
+}
+
+# Q2: implement pagerank(G, d=0.85, iterations=100)
+# PR(u) = (1-d)/N + d * sum(PR(v)/out(v) for v->u)
+def pagerank(G, d=0.85, iterations=100, return_iters=False):
+    nodes = list(G.keys())
+    n = len(nodes)
+    ranks = {node: 1/n for node in nodes}
+    # TODO: power iteration
+    if return_iters:
+        return ranks, iterations
+    return ranks
+
+# Q3: print sorted results + comment on d=0 and d=1
+
+# Q4: add early stopping with L1 norm < 1e-6
+
+# Q5: run with d=0.5 and d=0.99, compare
+</textarea>
+      </div>
+      <div class="output-wrap">
+        <div class="output-label">Output</div>
+        <div class="output-content" id="out-6"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="goPrev()">← <span id="prev-label">—</span></button>
+  <button class="nav-btn" id="btn-next" onclick="goNext()"><span id="next-label">—</span> →</button>
+</div>
+
+<div id="exit-overlay">
+  <div class="exit-icon-wrap"><svg width="32" height="32" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+  <div class="exit-title">Exam submitted successfully &nbsp;✅</div>
+  <div class="exit-sub">Your session has been closed.<br>Please contact your instructor if this was a mistake.</div>
+  <div class="exit-info"><div class="ei-label">Exam</div><div class="ei-val">DAT0223 — Graph Theory</div></div>
+  <div class="exit-info"><div class="ei-label">Time elapsed</div><div class="ei-val" id="elapsed">00:00</div></div>
+</div>
+
+<script>
+// Tab support
+document.querySelectorAll('.code-textarea').forEach(ta => {
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = ta.selectionStart;
+      ta.value = ta.value.substring(0,s)+'    '+ta.value.substring(ta.selectionEnd);
+      ta.selectionStart = ta.selectionEnd = s+4;
+    }
+    if ((e.ctrlKey||e.metaKey) && e.key==='Enter') {
+      e.preventDefault();
+      runCode(parseInt(ta.id.replace('input-','')));
+    }
+  });
+});
+
+// Copy snippet
+function copySnippet(btn, id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+// Skulpt loader
+function loadSkulpt(cb) {
+  if (window.Sk) { cb(); return; }
+  const s1 = document.createElement('script');
+  s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt.min.js';
+  s1.onload = () => {
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt-stdlib.js';
+    s2.onload = cb;
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+}
+
+function execPython(code) {
+  return new Promise((resolve, reject) => {
+    let output = '';
+    Sk.configure({
+      output: s => { output += s; },
+      read: f => { if (Sk.builtinFiles&&Sk.builtinFiles.files[f]) return Sk.builtinFiles.files[f]; throw new Error('File not found: '+f); }
+    });
+    Sk.misceval.asyncToPromise(() => Sk.importMainWithBody('<stdin>', false, code, true))
+      .then(() => resolve(output))
+      .catch(err => reject(err));
+  });
+}
+
+function runCode(n) {
+  const code = document.getElementById('input-'+n).value;
+  const out = document.getElementById('out-'+n);
+  out.className = 'output-content'; out.textContent = 'Running…';
+  loadSkulpt(() => {
+    execPython(code)
+      .then(o => { out.className='output-content'; out.textContent=o||'(no output)'; })
+      .catch(e => { out.className='output-content error'; out.textContent=e.toString(); });
+  });
+}
+
+function runTest(pane, qid, testCode, expected) {
+  const userCode = document.getElementById('input-'+pane).value;
+  const fullCode = userCode + '\n' + testCode;
+  const el = document.getElementById('tr-'+pane+'-'+qid);
+  el.className = 'test-result'; el.textContent = '⏳ Running…'; el.style.display = 'flex';
+  loadSkulpt(() => {
+    execPython(fullCode)
+      .then(o => {
+        const result = o.trim();
+        if (result === expected) {
+          el.className = 'test-result pass'; el.innerHTML = '✓ Passed';
+        } else {
+          el.className = 'test-result fail'; el.innerHTML = `✗ Failed — got: ${result}`;
+        }
+      })
+      .catch(e => { el.className='test-result fail'; el.innerHTML='✗ Error: '+e.toString().split('\n')[0]; });
+  });
+}
+
+// Nav
+const TABS = ['MST & Kruskal', 'Random Walks', 'Markov Property', 'Transition Matrices', 'Stationary Dist.', 'PageRank'];
+let current = 1;
+function updateNav() {
+  document.getElementById('prev-label').textContent = current>1 ? TABS[current-2] : '—';
+  document.getElementById('next-label').textContent = current<3 ? TABS[current] : '—';
+  document.getElementById('btn-prev').disabled = current===1;
+  document.getElementById('btn-next').disabled = current===6;
+}
+function goTo(n) {
+  current=n;
+  document.querySelectorAll('.page,.tab,.code-pane').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  document.getElementById('tab-'+n).classList.add('active');
+  document.getElementById('code-'+n).classList.add('active');
+  document.getElementById('ex-num').textContent=n;
+  document.getElementById('left').scrollTop=0;
+  updateNav();
+}
+function goPrev() { if(current>1) goTo(current-1); }
+function goNext() { if(current<6) goTo(current+1); }
+updateNav();
+
+const t0=Date.now();
+function tick() {
+  const s=Math.floor((Date.now()-t0)/1000);
+  document.getElementById('elapsed').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+setInterval(tick,1000);
+function submitExam() { tick(); document.getElementById('exit-overlay').classList.add('show'); }
+</script>
+</body>
+</html>
